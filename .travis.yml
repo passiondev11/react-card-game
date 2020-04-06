@@ -1,0 +1,21 @@
+language: node_js
+
+services:
+  - mongodb
+
+node_js:
+- "11"
+
+before_script:
+- npm run start-travis &
+- sleep 5
+
+script:
+- npx webpack
+- npm run test-travis
+
+after_success:
+- echo "Yay! Your site runs fine."
+
+after_failure:
+- echo "Uh-oh - something is wrong with your code!"
