@@ -204,15 +204,54 @@ export const Game = (props /*{ match }*/) => {
     });
   };
 
-  const handleStockCardClick = (event, card) => {
-    dispatch({
-      type: ActionTypes.MOVE_CARDS,
-      payload: {
-        cards: [[card, 0, 0]],
-        sourcePile: PileName.STOCK,
-        targetPile: PileName.WASTE
+  const sendMoveRequest = (mappedCards, sourceName, targetName) => {
+    let moveResult = { 
+      cards: mappedCards.map(card => {
+        console.log(card);
+        return { suit: card[0].suit, value: card[0].value, up: card[0].up }
+      }), 
+      src: sourceName + (mappedCards[0][1]+1), 
+      dst: targetName + (mappedCards[0][2]+1)
+    };
+
+    console.log(moveResult);
+
+    //sendMoveRequest(moveResult);
+    
+    fetch(`/v1/game/${match.params.id}`, {
+      method: 'PUT',
+      body: JSON.stringify(moveResult),
+      headers: {
+          'Content-type': 'application/json; charset=UTF-8'
       }
-    });
+    })
+    .then(res => {
+      if (res.status == 401) {
+        console.log('Unauthorized.');
+      } else if (res.status == 404) {
+          console.log(`Can't reach to server.`);
+      }
+      return res.json();
+    })
+    .then(data => {
+      console.log(data);
+      console.log("mapdata:"+mappedCards);
+      if(data.ok) {
+        dispatch({
+          type: ActionTypes.MOVE_CARDS,
+          payload: {
+            cards: mappedCards,
+            sourcePile: sourceName,
+            targetPile: targetName
+          }
+        });
+      }
+    })
+    .catch(err => console.log(err));
+  }
+
+  const handleStockCardClick = (event, card) => {
+    sendMoveRequest([[card, 0, 0]], PileName.STOCK, PileName.WASTE);
   };
 
   const handleCardDoubleClick = (event, card, source) => {
@@ -221,14 +260,7 @@ export const Game = (props /*{ match }*/) => {
     const { status, statusText } = isLowerRank([card], stack[targetIndex]);
 
     if (status) {
-      dispatch({
-        type: ActionTypes.MOVE_CARDS,
-        payload: {
-          cards: [[card, sourceIndex, targetIndex]],
-          sourcePile: sourceName,
-          targetPile: PileName.STACK
-        }
-      });
+      sendMoveRequest([[card, sourceIndex, targetIndex]], sourceName, PileName.STACK);
     } else {
       for (targetIndex = 0; targetIndex < 7; targetIndex++) {
         if (PileName.PILE == sourceName && targetIndex == sourceIndex) continue;
@@ -237,23 +269,13 @@ export const Game = (props /*{ match }*/) => {
                     isDifferentColor([card], pile[targetIndex]).status);
 
         if (valid) {
-          dispatch({
-            type: ActionTypes.MOVE_CARDS,
-            payload: {
-              cards: [[card, sourceIndex, targetIndex]],
-              sourcePile: sourceName,
-              targetPile: PileName.PILE
-            }
-          });
+          sendMoveRequest([[card, sourceIndex, targetIndex]], sourceName, PileName.PILE);
           break;
         }
       }
       setMessage(statusText);
     }
   };
-
-  const sendMoveRequest = (moveResult) => {
-  }
 
   const handleDrop = (event, target) => {
     event.preventDefault();
@@ -285,49 +307,7 @@ export const Game = (props /*{ match }*/) => {
       const { status, statusText } = validationResult;
 
       if (status) {
-        let moveResult = { 
-          cards: mappedCards.map(card => {
-            console.log(card);
-            return { suit: card[0].suit, value: card[0].value, up: card[0].up }
-          }), 
-          src: sourceName + (mappedCards[0][1]+1), 
-          dst: targetName + (mappedCards[0][2]+1)
-        };
-
-        console.log(moveResult);
-
-        //sendMoveRequest(moveResult);
-        
-        fetch(`/v1/game/${match.params.id}`, {
-          method: 'PUT',
-          body: JSON.stringify(moveResult),
-          headers: {
-              'Content-type': 'application/json; charset=UTF-8'
-          }
-        })
-        .then(res => {
-          if (res.status == 401) {
-            console.log('Unauthorized.');
-          } else if (res.status == 404) {
-              console.log(`Can't reach to server.`);
-          }
-          return res.json();
-        })
-        .then(data => {
-          console.log(data);
-          console.log("mapdata:"+mappedCards);
-          if(data.ok) {
-            dispatch({
-              type: ActionTypes.MOVE_CARDS,
-              payload: {
-                cards: mappedCards,
-                sourcePile: sourceName,
-                targetPile: targetName
-              }
-            });
-          }
-        })
-        .catch(err => console.log(err));
+        sendMoveRequest(mappedCards, sourceName, targetName);
       }
 
       setMessage(statusText);

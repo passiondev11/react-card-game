@@ -163,8 +163,8 @@ let validateMove = (state, requestedMove) => {
 
   let exData = {};
 
-  exData["stock"] = state.draw;
-  exData["waste"] = state.discard;
+  exData["stock1"] = state.draw;
+  exData["waste1"] = state.discard;
   exData["pile1"] = state.pile1;
   exData["pile2"] = state.pile2;
   exData["pile3"] = state.pile3;
@@ -190,15 +190,23 @@ let validateMove = (state, requestedMove) => {
     if(validStatus) {
       validStatus &= (suits.indexOf(firstCard.suit)%2) != (suits.indexOf(topCard.suit)%2);
     }
+    
+    let card;
+    while(card = requestedMove.cards.shift()) {
+      exData[requestedMove.src].shift();
+      exData[requestedMove.dst].push(card);
+    }
   }
 
   if(requestedMove.dst.indexOf("stack")!=-1) {
     if(validStatus) {
       validStatus &= ranks.indexOf(firstCard.value) == ranks.indexOf(topCard.value) + 1;
     }
-
-    if(validStatus) {
-      validStatus &= (suits.indexOf(firstCard.suit)%2) != (suits.indexOf(topCard.suit)%2);
+    
+    let card;
+    while(card = requestedMove.cards.shift()) {
+      exData[requestedMove.src].shift();
+      exData[requestedMove.dst].push(card);
     }
   }
 
