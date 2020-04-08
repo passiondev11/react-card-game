@@ -8,6 +8,19 @@ import _noop from 'lodash/noop';
 import _reverse from 'lodash/reverse';
 import { CardProps, CardTransferObject, PileName } from './definitions';
 
+const CardElementDiv = styled.div`
+  label: Card;
+  cursor: ${props=>props.cursorStyle};
+  ${props=>props.isHover && props.card.up && `
+    transform: scale(1.08);
+    top: 0;
+    left: 0;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+  `}
+`;
+
 const CardImg = styled.img`
   position: absolute;
   height: auto;
@@ -52,6 +65,7 @@ const CardElement = (props) => {
     cursorStyle = 'grab';
   }
 
+
   const handleMouseOver = (event) => {
   if (event && event.target === ref.current) {
     setIsHover(true);
@@ -94,26 +108,29 @@ const CardElement = (props) => {
   };
 
   return (
-  <div>
-    <CardImg 
-    id={id} 
-    ref={ref}
-    style={style} 
-    src={imgsource} 
+    <CardElementDiv
+      cursorStyle={cursorStyle}
+      isHover={isHover}
+      card={card}
+    >
+      <CardImg 
+        id={id} 
+        ref={ref}
+        style={style} 
+        src={imgsource} 
 
-    draggable={card.up}
-    onClick={handleClick}
-    onDoubleClick={handleDoubleClick}
-    onDragStart={handleDragStart}
-    onDragEnd={handleDragEnd}
-    onMouseOver={handleMouseOver}
-    onFocus={handleMouseOver}
-    onMouseLeave={handleMouseLeave}
-    onMouseOut={handleMouseLeave}
-    onBlur={handleMouseLeave}
-    />
-    {children}
-  </div>
+        onClick={handleClick}
+        onDoubleClick={handleDoubleClick}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onMouseOver={handleMouseOver}
+        onFocus={handleMouseOver}
+        onMouseLeave={handleMouseLeave}
+        onMouseOut={handleMouseLeave}
+        onBlur={handleMouseLeave}
+      />
+      {children}
+    </CardElementDiv>
   );
 };
 
