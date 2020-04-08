@@ -16,6 +16,8 @@ import { Start } from './components/start';
 import { Results } from './components/results';
 import { Game } from './components/game';
 
+import { createInitialState } from './components/setup';
+
 const defaultUser = {
   username: '',
   first_name: '',
@@ -109,7 +111,7 @@ const MyApp = () => {
             return loggedIn() ? <Start {...p} /> : <Redirect to={'/login'} />;
           }}
         />
-        <Route path="/game/:id" render={p => <Game {...p} user={p.user} />} />
+        <Route path="/game/:id" render={p => <Game {...p} user={p.user} initialState={createInitialState()}/>} />
         <Route
           path="/results/:id"
           render={p => <Results {...p} user={p.user} />}
