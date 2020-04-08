@@ -27,8 +27,8 @@ Object.freeze(Rank);
 const PileName = {
   STOCK : 'stock',
   WASTE : 'waste',
-  FOUNDATION : 'foundation',
-  TABLEAU : 'tableau'
+  FOUNDATION : 'stack',
+  TABLEAU : 'pile'
 };
 Object.freeze(PileName);
 

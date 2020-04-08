@@ -31,8 +31,8 @@ const setInitState = (prevState, payload) => {
     ...prevState,
     stock: payload.stock,
     waste: payload.waste,
-    foundation: payload.foundation,
-    tableau: payload.tableau,
+    stack: payload.stack,
+    pile: payload.pile,
   };
 };
 
@@ -60,7 +60,7 @@ const moveCardsAction = (prevState, mappedCards, sourceName, targetName) => {
 };
 
 const finishAction = (prevState) => {
-  const piles = _flatten(prevState.tableau.map((pile, pileIndex) => pile.map((card) => {
+  const piles = _flatten(prevState.pile.map((pile, pileIndex) => pile.map((card) => {
     const targetIndex = getFoundationTargetIndex(card);
     return [card, pileIndex, targetIndex];
   })));

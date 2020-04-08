@@ -56,14 +56,14 @@ const hasNoStock = (stock, waste) => ({
   statusText: 'There are still cards in the stock and/or waste piles'
 });
 
-const isAllRevealed = (tableau) => {
-  const cards = _flatten(tableau);
+const isAllRevealed = (pile) => {
+  const cards = _flatten(pile);
   const result = _every(cards, (card) => card.up);
   console.info('isAllRevealed', result);
 
   return {
     status: result,
-    statusText: 'You need to reveal all cards on the tableau'
+    statusText: 'You need to reveal all cards on the pile'
   };
 };
 
