@@ -72,9 +72,10 @@ const CardPanel = styled.div`
 
 export const Game = (props /*{ match }*/) => {
   const {
-  initialState,
-  match
+    match
   } = props;
+  
+  const initialState = { stock: [[]], waste: [[]], stack: [[],[],[],[]], pile: [[],[],[],[],[],[],[]]};
 
   let [state, setState] = useState({
     stock: [], 
@@ -138,7 +139,7 @@ export const Game = (props /*{ match }*/) => {
           type: ActionTypes.FLIP_CARD,
           payload: {
             cards: [[topCard, i, i]],
-            targetPile: PileName.TABLEAU
+            targetPile: PileName.PILE
           }
         });
       }
@@ -225,7 +226,7 @@ export const Game = (props /*{ match }*/) => {
         payload: {
           cards: [[card, sourceIndex, targetIndex]],
           sourcePile: sourceName,
-          targetPile: PileName.FOUNDATION
+          targetPile: PileName.STACK
         }
       });
     } else {
@@ -241,7 +242,7 @@ export const Game = (props /*{ match }*/) => {
             payload: {
               cards: [[card, sourceIndex, targetIndex]],
               sourcePile: sourceName,
-              targetPile: PileName.TABLEAU
+              targetPile: PileName.PILE
             }
           });
           break;
@@ -268,7 +269,8 @@ export const Game = (props /*{ match }*/) => {
       const mappedCards = cards.map((card) => [card, sourceIndex, targetIndex]);
       let validationResult = { status: true, statusText: '' };
 
-      if (targetName === PileName.TABLEAU) {
+      if (targetName === PileName.PILE) {
+
         validationResult = isHigherRank(cards, pile[targetIndex]);
 
         if (validationResult.status) {
@@ -276,7 +278,7 @@ export const Game = (props /*{ match }*/) => {
         }
       }
 
-      if (targetName === PileName.FOUNDATION) {
+      if (targetName === PileName.STACK) {
         validationResult = isLowerRank(cards, stack[targetIndex]);
       }
 
@@ -335,45 +337,46 @@ export const Game = (props /*{ match }*/) => {
   };
 
   useEffect(() => {
-  const getGameState = async () => {
-    const response = await fetch(`/v1/game/${match.params.id}`);
-    const data = await response.json();
-    setState({
-      stock: [data.draw],
-      waste: [data.discard],
-      stack: [data.stack1, data.stack2, data.stack3, data.stack4],
-      pile: [data.pile1,data.pile2,data.pile3,data.pile4,data.pile5,data.pile6,data.pile7],
-      tableau1: [data.pile1,data.pile2,data.pile3,data.pile4,data.pile5,data.pile6,data.pile7],
-      pile1: data.pile1,
-      pile2: data.pile2,
-      pile3: data.pile3,
-      pile4: data.pile4,
-      pile5: data.pile5,
-      pile6: data.pile6,
-      pile7: data.pile7,
-      stack1: data.stack1,
-      stack2: data.stack2,
-      stack3: data.stack3,
-      stack4: data.stack4,
-      draw: data.draw,
-      discard: data.discard
-    });
-    
-    /*dispatch({
-    type: ActionTypes.SET_INIT_VALUE,
-      payload: {
+    const getGameState = async () => {
+      const response = await fetch(`/v1/game/${match.params.id}`);
+      const data = await response.json();
+      setState({
         stock: [data.draw],
         waste: [data.discard],
         stack: [data.stack1, data.stack2, data.stack3, data.stack4],
         pile: [data.pile1,data.pile2,data.pile3,data.pile4,data.pile5,data.pile6,data.pile7],
-      }
-    });*/
-  };
-  getGameState();
-  }, [match.params.id, stock, waste, stack, pile]);
+        pile1: data.pile1,
+        pile2: data.pile2,
+        pile3: data.pile3,
+        pile4: data.pile4,
+        pile5: data.pile5,
+        pile6: data.pile6,
+        pile7: data.pile7,
+        stack1: data.stack1,
+        stack2: data.stack2,
+        stack3: data.stack3,
+        stack4: data.stack4,
+        draw: data.draw,
+        discard: data.discard
+      });
+      
+      dispatch({
+      type: ActionTypes.SET_INIT_VALUE,
+        payload: {
+          stock: [data.draw],
+          waste: [data.discard],
+          stack: [data.stack1, data.stack2, data.stack3, data.stack4],
+          pile: [data.pile1,data.pile2,data.pile3,data.pile4,data.pile5,data.pile6,data.pile7],
+        }
+      });
+
+      console.log("awefawefawefawef");
+    };
+    getGameState();
+  }, [match.params.id]);
 
   const onClick = ev => {
-  let target = ev.target;
+    let target = ev.target;
   };
 
   return (
@@ -382,36 +385,36 @@ export const Game = (props /*{ match }*/) => {
     <Pile
       cards={stack[0]}
       spacing={0}
-      name={PileName.FOUNDATION}
+      name={PileName.STACK}
       onDrop={handleDrop}
       key="foundation1"
     />
     <Pile
       cards={stack[1]}
       spacing={0}
-      name={PileName.FOUNDATION}
+      name={PileName.STACK}
       onDrop={handleDrop}
       key="foundation2"
     />
     <Pile
       cards={stack[2]}
       spacing={0}
-      name={PileName.FOUNDATION}
+      name={PileName.STACK}
       onDrop={handleDrop}
       key="foundation3"
     />
     <Pile
       cards={stack[3]}
       spacing={0}
-      name={PileName.FOUNDATION}
+      name={PileName.STACK}
       onDrop={handleDrop}
       key="foundation4"
     />
     {/* <PileGroup 
-      piles={[state.stack1,state.stack2,state.stack3,state.stack4]}
+      piles={stack}
       spacing={0}
       onClick={onClick}
-      name={PileName.FOUNDATION}
+      name={PileName.STACK}
       onDrop={handleDrop}
     /> */}
     <CardRowGap />
@@ -457,7 +460,7 @@ export const Game = (props /*{ match }*/) => {
     <Pile cards={state.pile7} onClick={onClick} /> */}
     <PileGroup
       piles={pile}
-      name={PileName.TABLEAU}
+      name={PileName.PILE}
       stackDown
       onDrop={handleDrop}
       onCardDoubleClick={handleCardDoubleClick}
@@ -466,7 +469,7 @@ export const Game = (props /*{ match }*/) => {
 {/* 
     <CardRow>
     <PileGroup
-      name={PileName.FOUNDATION}
+      name={PileName.STACK}
       piles={stack}
       onDrop={handleDrop}
     />
@@ -485,7 +488,7 @@ export const Game = (props /*{ match }*/) => {
     </CardRow>
     <CardRow>
     <PileGroup
-      name={PileName.TABLEAU}
+      name={PileName.PILE}
       piles={pile}
       stackDown
       onDrop={handleDrop}
