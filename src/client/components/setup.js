@@ -44,8 +44,8 @@ const createSolvedState = () => {
   const state = {
     stock: [[]],
     waste: [[]],
-    foundation: [[], [], [], []],
-    tableau: [
+    stack: [[], [], [], []],
+    pile: [
       revealedStack.slice(0, 1),
       revealedStack.slice(1, 3),
       revealedStack.slice(3, 6),
@@ -65,8 +65,8 @@ const createInitialState = () => {
   const state = {
     stock: [stack.slice(28)],
     waste: [[]],
-    foundation: [[], [], [], []],
-    tableau: [
+    stack: [[], [], [], []],
+    pile: [
       stack.slice(0, 1),
       stack.slice(1, 3),
       stack.slice(3, 6),
@@ -77,7 +77,7 @@ const createInitialState = () => {
     ]
   };
 
-  for (const pile of state.tableau) {
+  for (const pile of state.pile) {
     const lastCard = _last(pile);
     if (lastCard) {
       lastCard.reveal();

@@ -51,20 +51,20 @@ const CardPanel = styled.div`
   grid-template-columns: repeat(7, 1fr);
   grid-template-rows: auto 1fr;
   grid-template-areas:
-    "stock waste . foundation foundation foundation foundation"
-    "tableau tableau tableau tableau tableau tableau tableau";
+    "stock waste . stack stack stack stack"
+    "pile pile pile pile pile pile pile";
 
   @media (max-width: 768px) {
     grid-template-columns: auto 1fr;
     grid-template-rows: repeat(7, 1fr);
     grid-template-areas:
-      "stock tableau"
-      "waste tableau"
-      ". tableau"
-      "foundation tableau"
-      "foundation tableau"
-      "foundation tableau"
-      "foundation tableau";
+      "stock pile"
+      "waste pile"
+      ". pile"
+      "stack pile"
+      "stack pile"
+      "stack pile"
+      "stack pile";
     padding-bottom: 100px;
   }
 `;
@@ -72,15 +72,16 @@ const CardPanel = styled.div`
 
 export const Game = (props /*{ match }*/) => {
   const {
-  initialState,
-  match
+    match
   } = props;
+  
+  const initialState = { stock: [[]], waste: [[]], stack: [[],[],[],[]], pile: [[],[],[],[],[],[],[]]};
 
   let [state, setState] = useState({
     stock: [], 
     waste: [], 
-    foundation: [], 
-    tableau: [],
+    stack: [], 
+    pile: [],
     pile1: [],
     pile2: [],
     pile3: [],
@@ -99,23 +100,23 @@ export const Game = (props /*{ match }*/) => {
   let [startDrag, setStartDrag] = useState({ x: 0, y: 0 });
 
   const [{
-  stock, waste, foundation, tableau
+  stock, waste, stack, pile
   }, dispatch] = useReducer(reducer, initialState);
   
   const [message, setMessage] = useState('');
 
   const isDone = useMemo(() => {
 
-    const allCards = _flattenDeep([...stock, ...waste, ...foundation]);
+    const allCards = _flattenDeep([...stock, ...waste, ...stack]);
     const up = _every(allCards, (card) => card.up);
     const isStockAndWasteEmpty = stock[0].length === 0 && waste[0].length === 0;
     return isStockAndWasteEmpty && up;
-  }, [foundation, stock, waste]);
+  }, [stack, stock, waste]);
 
   const isFinished = useMemo(() => {
-    const allTableauCards = _flattenDeep(foundation);
+    const allTableauCards = _flattenDeep(stack);
     return allTableauCards.length === cardCount;
-  }, [foundation]);
+  }, [stack]);
 
   useEffect(() => {
     if (message.length > 0) {
@@ -130,7 +131,7 @@ export const Game = (props /*{ match }*/) => {
   }, [isFinished]);
 
   useEffect(() => {
-    tableau.forEach((pile, i) => {
+    pile.forEach((pile, i) => {
       const topCard = _last(pile);
 
       if (topCard && !topCard.up) {
@@ -138,12 +139,12 @@ export const Game = (props /*{ match }*/) => {
           type: ActionTypes.FLIP_CARD,
           payload: {
             cards: [[topCard, i, i]],
-            targetPile: PileName.TABLEAU
+            targetPile: PileName.PILE
           }
         });
       }
     });
-  }, [tableau]);
+  }, [pile]);
 
   useEffect(() => {
     const pile = waste[0];
@@ -217,7 +218,7 @@ export const Game = (props /*{ match }*/) => {
   const handleCardDoubleClick = (event, card, source) => {
     const [sourceName, sourceIndex] = source;
     let targetIndex = getFoundationTargetIndex(card);
-    const { status, statusText } = isLowerRank([card], foundation[targetIndex]);
+    const { status, statusText } = isLowerRank([card], stack[targetIndex]);
 
     if (status) {
       dispatch({
@@ -225,15 +226,15 @@ export const Game = (props /*{ match }*/) => {
         payload: {
           cards: [[card, sourceIndex, targetIndex]],
           sourcePile: sourceName,
-          targetPile: PileName.FOUNDATION
+          targetPile: PileName.STACK
         }
       });
     } else {
       for (targetIndex = 0; targetIndex < 7; targetIndex++) {
         if (targetIndex == sourceIndex) continue;
-        let valid = (tableau[targetIndex].length == 0) || 
-                    (isHigherRank([card], tableau[targetIndex]).status && 
-                    isDifferentColor([card], tableau[targetIndex]).status);
+        let valid = (pile[targetIndex].length == 0) || 
+                    (isHigherRank([card], pile[targetIndex]).status && 
+                    isDifferentColor([card], pile[targetIndex]).status);
 
         if (valid) {
           dispatch({
@@ -241,7 +242,7 @@ export const Game = (props /*{ match }*/) => {
             payload: {
               cards: [[card, sourceIndex, targetIndex]],
               sourcePile: sourceName,
-              targetPile: PileName.TABLEAU
+              targetPile: PileName.PILE
             }
           });
           break;
@@ -268,16 +269,17 @@ export const Game = (props /*{ match }*/) => {
       const mappedCards = cards.map((card) => [card, sourceIndex, targetIndex]);
       let validationResult = { status: true, statusText: '' };
 
-      if (targetName === PileName.TABLEAU) {
-        validationResult = isHigherRank(cards, tableau[targetIndex]);
+      if (targetName === PileName.PILE) {
+
+        validationResult = isHigherRank(cards, pile[targetIndex]);
 
         if (validationResult.status) {
-          validationResult = isDifferentColor(cards, tableau[targetIndex]);
+          validationResult = isDifferentColor(cards, pile[targetIndex]);
         }
       }
 
-      if (targetName === PileName.FOUNDATION) {
-        validationResult = isLowerRank(cards, foundation[targetIndex]);
+      if (targetName === PileName.STACK) {
+        validationResult = isLowerRank(cards, stack[targetIndex]);
       }
 
       const { status, statusText } = validationResult;
@@ -335,83 +337,84 @@ export const Game = (props /*{ match }*/) => {
   };
 
   useEffect(() => {
-  const getGameState = async () => {
-    const response = await fetch(`/v1/game/${match.params.id}`);
-    const data = await response.json();
-    setState({
-      stock: [data.draw],
-      waste: [data.discard],
-      foundation: [data.stack1, data.stack2, data.stack3, data.stack4],
-      tableau: [data.pile1,data.pile2,data.pile3,data.pile4,data.pile5,data.pile6,data.pile7],
-      tableau1: [data.pile1,data.pile2,data.pile3,data.pile4,data.pile5,data.pile6,data.pile7],
-      pile1: data.pile1,
-      pile2: data.pile2,
-      pile3: data.pile3,
-      pile4: data.pile4,
-      pile5: data.pile5,
-      pile6: data.pile6,
-      pile7: data.pile7,
-      stack1: data.stack1,
-      stack2: data.stack2,
-      stack3: data.stack3,
-      stack4: data.stack4,
-      draw: data.draw,
-      discard: data.discard
-    });
-    
-    /*dispatch({
-    type: ActionTypes.SET_INIT_VALUE,
-      payload: {
+    const getGameState = async () => {
+      const response = await fetch(`/v1/game/${match.params.id}`);
+      const data = await response.json();
+      setState({
         stock: [data.draw],
         waste: [data.discard],
-        foundation: [data.stack1, data.stack2, data.stack3, data.stack4],
-        tableau: [data.pile1,data.pile2,data.pile3,data.pile4,data.pile5,data.pile6,data.pile7],
-      }
-    });*/
-  };
-  getGameState();
-  }, [match.params.id, stock, waste, foundation, tableau]);
+        stack: [data.stack1, data.stack2, data.stack3, data.stack4],
+        pile: [data.pile1,data.pile2,data.pile3,data.pile4,data.pile5,data.pile6,data.pile7],
+        pile1: data.pile1,
+        pile2: data.pile2,
+        pile3: data.pile3,
+        pile4: data.pile4,
+        pile5: data.pile5,
+        pile6: data.pile6,
+        pile7: data.pile7,
+        stack1: data.stack1,
+        stack2: data.stack2,
+        stack3: data.stack3,
+        stack4: data.stack4,
+        draw: data.draw,
+        discard: data.discard
+      });
+      
+      dispatch({
+      type: ActionTypes.SET_INIT_VALUE,
+        payload: {
+          stock: [data.draw],
+          waste: [data.discard],
+          stack: [data.stack1, data.stack2, data.stack3, data.stack4],
+          pile: [data.pile1,data.pile2,data.pile3,data.pile4,data.pile5,data.pile6,data.pile7],
+        }
+      });
+
+      console.log("awefawefawefawef");
+    };
+    getGameState();
+  }, [match.params.id]);
 
   const onClick = ev => {
-  let target = ev.target;
+    let target = ev.target;
   };
 
   return (
   <GameBase>
     <CardRow>
     <Pile
-      cards={foundation[0]}
+      cards={stack[0]}
       spacing={0}
-      name={PileName.FOUNDATION}
+      name={PileName.STACK}
       onDrop={handleDrop}
       key="foundation1"
     />
     <Pile
-      cards={foundation[1]}
+      cards={stack[1]}
       spacing={0}
-      name={PileName.FOUNDATION}
+      name={PileName.STACK}
       onDrop={handleDrop}
       key="foundation2"
     />
     <Pile
-      cards={foundation[2]}
+      cards={stack[2]}
       spacing={0}
-      name={PileName.FOUNDATION}
+      name={PileName.STACK}
       onDrop={handleDrop}
       key="foundation3"
     />
     <Pile
-      cards={foundation[3]}
+      cards={stack[3]}
       spacing={0}
-      name={PileName.FOUNDATION}
+      name={PileName.STACK}
       onDrop={handleDrop}
       key="foundation4"
     />
     {/* <PileGroup 
-      piles={[state.stack1,state.stack2,state.stack3,state.stack4]}
+      piles={stack}
       spacing={0}
       onClick={onClick}
-      name={PileName.FOUNDATION}
+      name={PileName.STACK}
       onDrop={handleDrop}
     /> */}
     <CardRowGap />
@@ -456,8 +459,8 @@ export const Game = (props /*{ match }*/) => {
     <Pile cards={state.pile6} onClick={onClick} />
     <Pile cards={state.pile7} onClick={onClick} /> */}
     <PileGroup
-      piles={tableau}
-      name={PileName.TABLEAU}
+      piles={pile}
+      name={PileName.PILE}
       stackDown
       onDrop={handleDrop}
       onCardDoubleClick={handleCardDoubleClick}
@@ -466,8 +469,8 @@ export const Game = (props /*{ match }*/) => {
 {/* 
     <CardRow>
     <PileGroup
-      name={PileName.FOUNDATION}
-      piles={foundation}
+      name={PileName.STACK}
+      piles={stack}
       onDrop={handleDrop}
     />
     <CardRowGap />
@@ -485,8 +488,8 @@ export const Game = (props /*{ match }*/) => {
     </CardRow>
     <CardRow>
     <PileGroup
-      name={PileName.TABLEAU}
-      piles={tableau}
+      name={PileName.PILE}
+      piles={pile}
       stackDown
       onDrop={handleDrop}
       onCardDoubleClick={handleCardDoubleClick}

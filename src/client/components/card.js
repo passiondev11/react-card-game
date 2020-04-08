@@ -19,9 +19,7 @@ class Card {
   }
 
   id() {
-    const names = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'jack', 'queen', 'king'];
-
-    return `${this.suit}_${names[this.value - 1]}`;
+    return `${this.suit}_${this.value}`;
   }
 
   reveal() {

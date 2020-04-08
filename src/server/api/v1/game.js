@@ -6,7 +6,8 @@ const {
   initialState,
   shuffleCards,
   filterGameForProfile,
-  filterMoveForResults
+  filterMoveForResults,
+  validateMove
 } = require("../../solitaire");
 
 module.exports = app => {
@@ -144,7 +145,9 @@ module.exports = app => {
       }
 
       // Movement validation
-      if (0) {
+      let game = await app.models.Game.findById(req.params.id);
+      let result = validateMove(game.state, data);
+      if (result.result != "success") {
         console.log(`Move.invalid movement.`);
         return res.status(400).send({ error: "invalid movement" });
       }
@@ -164,10 +167,16 @@ module.exports = app => {
 
         console.log("move saved");
 
-        const query = { $inc: { moves: 1 } };
+        let query = { $inc: { moves: 1 } };
         // Add game movement value
         await app.models.Game.findByIdAndUpdate(req.params.id, query);
         console.log("move count incremented.");
+
+        query = { state: result.state };
+        // Add game movement value
+        await app.models.Game.findByIdAndUpdate(req.params.id, query);
+        console.log("game status changed.");
+
         res.status(201).send({ ok: "ok" });
       } catch (err) {
         console.log(`Move.create move failure: ${err}`);

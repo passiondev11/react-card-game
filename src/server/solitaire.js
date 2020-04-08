@@ -82,7 +82,11 @@ const filterMoveForResults = move => ({
 });
 
 let validateMove = (state, requestedMove) => {
+  let res = {result: "", state: state};
   /* return error or new state */
+  
+  res.result = "success";
+  return res;
 };
 
 module.exports = {

@@ -7,6 +7,7 @@ import {
   Suit, GameState, PileName, ActionTypes, Action, ActionPayloadSourceName, ActionPayloadTargetName, MappedCard
 } from './definitions';
 import { createInitialState } from './setup';
+import Card from './card';
 
 const getFoundationTargetIndex = (card) => {
   let targetIndex = 0;
@@ -27,12 +28,29 @@ const getFoundationTargetIndex = (card) => {
 };
 
 const setInitState = (prevState, payload) => {
+
+  const stock = payload.stock.map(stock => stock.map(stock => {
+      return new Card(stock.suit, stock.value, stock.up);
+  }));
+  
+  const waste = payload.waste.map(waste => waste.map(waste => {
+    return new Card(waste.suit, waste.value, waste.up);
+  }));
+  
+  const stack = payload.stack.map(stack => stack.map(stack => {
+    return new Card(stack.suit, stack.value, stack.up);
+  }));
+  
+  const pile = payload.pile.map(pile => pile.map(pile => {
+    return new Card(pile.suit, pile.value, pile.up);
+  }));
+
   return {
     ...prevState,
-    stock: payload.stock,
-    waste: payload.waste,
-    foundation: payload.foundation,
-    tableau: payload.tableau,
+    stock: stock,
+    waste: waste,
+    stack: stack,
+    pile: pile,
   };
 };
 
@@ -60,7 +78,7 @@ const moveCardsAction = (prevState, mappedCards, sourceName, targetName) => {
 };
 
 const finishAction = (prevState) => {
-  const piles = _flatten(prevState.tableau.map((pile, pileIndex) => pile.map((card) => {
+  const piles = _flatten(prevState.pile.map((pile, pileIndex) => pile.map((card) => {
     const targetIndex = getFoundationTargetIndex(card);
     return [card, pileIndex, targetIndex];
   })));
@@ -70,7 +88,7 @@ const finishAction = (prevState) => {
     return card.value;
   });
 
-  return moveCardsAction(prevState, sortedCards, PileName.TABLEAU, PileName.FOUNDATION);
+  return moveCardsAction(prevState, sortedCards, PileName.PILE, PileName.STACK);
 };
 
 const flipCardAction = (prevState, mappedCards, targetName) => {
