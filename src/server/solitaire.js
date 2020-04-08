@@ -81,11 +81,138 @@ const filterMoveForResults = move => ({
   ...move
 });
 
+const Suit  = {
+  Spade : 'spades',
+  Heart : 'hearts',
+  Diamond : 'diamonds',
+  Club : 'clubs'
+};
+Object.freeze(Suit);
+
+const Rank = {
+  Ace : 'ace',
+  Two : '2',
+  Three : '3',
+  Four : '4',
+  Five : '5',
+  Six : '6',
+  Seven : '7',
+  Eight : '8',
+  Nine : '9',
+  Ten : '10',
+  Jack : 'jack',
+  Queen : 'queen',
+  King : 'king',
+  Joker : 'joker'
+};
+Object.freeze(Rank);
+
+
+const suits = [
+  Suit.Spade,
+  Suit.Heart,
+  Suit.Club,
+  Suit.Diamond
+];
+const ranks = [
+  Rank.Ace,
+  Rank.Two,
+  Rank.Three,
+  Rank.Four,
+  Rank.Five,
+  Rank.Six,
+  Rank.Seven,
+  Rank.Eight,
+  Rank.Nine,
+  Rank.Ten,
+  Rank.Jack,
+  Rank.Queen,
+  Rank.King
+];
+
+const moveCardsAction = (prevState, mappedCards, sourceName, targetName) => {
+  const newSource = _cloneDeep(prevState[sourceName]);
+  const newTarget = _cloneDeep(prevState[targetName]);
+
+  for (const mappedCard of mappedCards) {
+    const [sourceCard, sourceIndex, targetIndex] = mappedCard;
+
+    newSource[sourceIndex] = _filter(newSource[sourceIndex], (card) => card.id !== sourceCard.id);
+
+    newTarget[targetIndex].push(sourceCard);
+
+    if (targetName === sourceName) {
+      newTarget[sourceIndex] = newSource[sourceIndex];
+    }
+  }
+
+  return {
+    ...prevState,
+    [sourceName]: newSource,
+    [targetName]: newTarget
+  };
+};
+
 let validateMove = (state, requestedMove) => {
-  let res = {result: "", state: state};
+  let res = {result: "succes", state: state};
   /* return error or new state */
   
-  res.result = "success";
+  if(!requestedMove.cards.length) {
+    return res;
+  }
+
+  let exData = {};
+
+  exData["stock"] = state.draw;
+  exData["waste"] = state.discard;
+  exData["pile1"] = state.pile1;
+  exData["pile2"] = state.pile2;
+  exData["pile3"] = state.pile3;
+  exData["pile4"] = state.pile4;
+  exData["pile5"] = state.pile5;
+  exData["pile6"] = state.pile6;
+  exData["pile7"] = state.pile7;
+  exData["stack1"] = state.stack1;
+  exData["stack2"] = state.stack2;
+  exData["stack3"] = state.stack3;
+  exData["stack4"] = state.stack4;
+
+  let firstCard = requestedMove.cards[0];
+  let topCard = exData[requestedMove.dst][exData[requestedMove.dst].length-1];
+
+  let validStatus = false;
+
+  if(requestedMove.dst.indexOf("pile")!=-1) {
+    if(validStatus) {
+      validStatus &= ranks.indexOf(firstCard.value) == ranks.indexOf(topCard.value) - 1;
+    }
+
+    if(validStatus) {
+      validStatus &= (suits.indexOf(firstCard.suit)%2) != (suits.indexOf(topCard.suit)%2);
+    }
+  }
+
+  if(requestedMove.dst.indexOf("stack")!=-1) {
+    if(validStatus) {
+      validStatus &= ranks.indexOf(firstCard.value) == ranks.indexOf(topCard.value) + 1;
+    }
+
+    if(validStatus) {
+      validStatus &= (suits.indexOf(firstCard.suit)%2) != (suits.indexOf(topCard.suit)%2);
+    }
+  }
+
+  if(validStatus) {
+    let card;
+    while(card = requestedMove.cards.pop()) {
+      exData[requestedMove.src].pop();
+      exData[requestedMove.dst].push(card);
+    }
+
+  }else {
+    res.result = "success";
+  }
+  
   return res;
 };
 

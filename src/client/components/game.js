@@ -290,8 +290,8 @@ export const Game = (props /*{ match }*/) => {
             console.log(card);
             return { suit: card[0].suit, value: card[0].value, up: card[0].up }
           }), 
-          src: sourceName + mappedCards[0][1], 
-          dst: targetName + mappedCards[0][2]
+          src: sourceName + (mappedCards[0][1]+1), 
+          dst: targetName + (mappedCards[0][2]+1)
         };
 
         console.log(moveResult);
