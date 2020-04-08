@@ -81,7 +81,6 @@ export const Game = (props /*{ match }*/) => {
     waste: [], 
     foundation: [], 
     tableau: [],
-    tableau1: [],
     pile1: [],
     pile2: [],
     pile3: [],
@@ -217,7 +216,7 @@ export const Game = (props /*{ match }*/) => {
 
   const handleCardDoubleClick = (event, card, source) => {
     const [sourceName, sourceIndex] = source;
-    const targetIndex = getFoundationTargetIndex(card);
+    let targetIndex = getFoundationTargetIndex(card);
     const { status, statusText } = isLowerRank([card], foundation[targetIndex]);
 
     if (status) {
@@ -229,10 +228,31 @@ export const Game = (props /*{ match }*/) => {
           targetPile: PileName.FOUNDATION
         }
       });
-    }
+    } else {
+      for (targetIndex = 0; targetIndex < 7; targetIndex++) {
+        if (targetIndex == sourceIndex) continue;
+        let valid = (tableau[targetIndex].length == 0) || 
+                    (isHigherRank([card], tableau[targetIndex]).status && 
+                    isDifferentColor([card], tableau[targetIndex]).status);
 
-    setMessage(statusText);
+        if (valid) {
+          dispatch({
+            type: ActionTypes.MOVE_CARDS,
+            payload: {
+              cards: [[card, sourceIndex, targetIndex]],
+              sourcePile: sourceName,
+              targetPile: PileName.TABLEAU
+            }
+          });
+          break;
+        }
+      }
+      setMessage(statusText);
+    }
   };
+
+  const sendMoveRequest = (moveResult) => {
+  }
 
   const handleDrop = (event, target) => {
     event.preventDefault();
@@ -263,24 +283,49 @@ export const Game = (props /*{ match }*/) => {
       const { status, statusText } = validationResult;
 
       if (status) {
-      let moveResult = { 
-        cards: mappedCards.map(card => {
-        return { suit: card[0].suit, value: card[0].value }
-        }), 
-        src: sourceName + mappedCards[0][1], 
-        dst: targetName + mappedCards[0][2]
-      };
+        let moveResult = { 
+          cards: mappedCards.map(card => {
+            console.log(card);
+            return { suit: card[0].suit, value: card[0].value, up: card[0].up }
+          }), 
+          src: sourceName + mappedCards[0][1], 
+          dst: targetName + mappedCards[0][2]
+        };
 
-      console.log(moveResult);
+        console.log(moveResult);
 
-        dispatch({
-          type: ActionTypes.MOVE_CARDS,
-          payload: {
-            cards: mappedCards,
-            sourcePile: sourceName,
-            targetPile: targetName
+        //sendMoveRequest(moveResult);
+        
+        fetch(`/v1/game/${match.params.id}`, {
+          method: 'PUT',
+          body: JSON.stringify(moveResult),
+          headers: {
+              'Content-type': 'application/json; charset=UTF-8'
           }
-        });
+        })
+        .then(res => {
+          if (res.status == 401) {
+            console.log('Unauthorized.');
+          } else if (res.status == 404) {
+              console.log(`Can't reach to server.`);
+          }
+          return res.json();
+        })
+        .then(data => {
+          console.log(data);
+          console.log("mapdata:"+mappedCards);
+          if(data.ok) {
+            dispatch({
+              type: ActionTypes.MOVE_CARDS,
+              payload: {
+                cards: mappedCards,
+                sourcePile: sourceName,
+                targetPile: targetName
+              }
+            });
+          }
+        })
+        .catch(err => console.log(err));
       }
 
       setMessage(statusText);
@@ -374,6 +419,7 @@ export const Game = (props /*{ match }*/) => {
       cards={stock[0]}
       spacing={0}
       name={PileName.STOCK}
+      onClick={handleStockClick}
       onPileClick={handleStockClick}
       onCardClick={handleStockCardClick}
       key="stock"

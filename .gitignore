@@ -4,3 +4,4 @@ public/js/main.*
 public/js/vendor.*
 *.swo
 *.swp
+package-lock.json
