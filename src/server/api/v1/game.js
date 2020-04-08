@@ -114,6 +114,69 @@ module.exports = app => {
     }
   });
 
+  /**
+   * Validate the movement and add card movement information
+   *
+   * @param (req.params.id} Id of game to fetch
+   * @return {200} Validation result
+   */
+  app.put("/v1/game/:id", async (req, res) => {
+    if (!req.session.user) {
+      res.status(401).send({ error: "unauthorized" });
+    } else {
+      let data;
+      try {
+        // Validate user input
+        let schema = Joi.object().keys({
+          src: Joi.string()
+            .lowercase()
+            .required(),
+          dst: Joi.string()
+            .lowercase()
+            .required(),
+          cards: Joi.array()
+        });
+        data = await schema.validateAsync(req.body);
+      } catch (err) {
+        const message = err.details[0].message;
+        console.log(`Move.create validation failure: ${message}`);
+        return res.status(400).send({ error: message });
+      }
+
+      // Movement validation
+      if (0) {
+        console.log(`Move.invalid movement.`);
+        return res.status(400).send({ error: "invalid movement" });
+      }
+
+      // Add the new movement
+      try {
+        let newMove = {
+          user: req.session.user._id,
+          game: req.params.id,
+          cards: data.cards,
+          src: data.src,
+          dst: data.dst,
+          up: data.up,
+        };
+        let move = new app.models.Move(newMove);
+        await move.save();
+
+        console.log("move saved");
+
+        const query = { $inc: { moves: 1 } };
+        // Add game movement value
+        await app.models.Game.findByIdAndUpdate(req.params.id, query);
+        console.log("move count incremented.");
+        res.status(201).send({ ok: "ok" });
+      } catch (err) {
+        console.log(`Move.create move failure: ${err}`);
+        res.status(400).send({ error: "failure creating movement" });
+        // Much more error management needs to happen here
+      }
+    }
+  });
+
   // Provide end-point to request shuffled deck of cards and initial state - for testing
   app.get("/v1/cards/shuffle", (req, res) => {
     res.send(shuffleCards(false));

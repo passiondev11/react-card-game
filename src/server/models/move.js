@@ -16,8 +16,7 @@ let Move = new Schema(
     src: { type: String },
     dst: { type: String },
     date: { type: Date }
-  },
-  { _id: false }
+  }
 );
 
 Move.pre("validate", function(next) {
