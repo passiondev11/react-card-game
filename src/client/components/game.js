@@ -231,7 +231,7 @@ export const Game = (props /*{ match }*/) => {
       });
     } else {
       for (targetIndex = 0; targetIndex < 7; targetIndex++) {
-        if (targetIndex == sourceIndex) continue;
+        if (PileName.PILE == sourceName && targetIndex == sourceIndex) continue;
         let valid = (pile[targetIndex].length == 0) || 
                     (isHigherRank([card], pile[targetIndex]).status && 
                     isDifferentColor([card], pile[targetIndex]).status);
