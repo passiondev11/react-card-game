@@ -51,9 +51,9 @@ const isLowerRank = (cards, pile) => {
   };
 };
 
-const hasNoStock = (stock, waste) => ({
-  status: stock.length === 0 && waste.length === 0,
-  statusText: 'There are still cards in the stock and/or waste piles'
+const hasNoStock = (draw, discard) => ({
+  status: draw.length === 0 && discard.length === 0,
+  statusText: 'There are still cards in the draw and/or discard piles'
 });
 
 const isAllRevealed = (pile) => {

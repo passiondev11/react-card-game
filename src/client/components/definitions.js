@@ -25,8 +25,8 @@ const Rank = {
 Object.freeze(Rank);
 
 const PileName = {
-  STOCK : 'stock',
-  WASTE : 'waste',
+  STOCK : 'draw',
+  WASTE : 'discard',
   STACK : 'stack',
   PILE : 'pile'
 };

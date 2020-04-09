@@ -51,15 +51,15 @@ const CardPanel = styled.div`
   grid-template-columns: repeat(7, 1fr);
   grid-template-rows: auto 1fr;
   grid-template-areas:
-    "stock waste . stack stack stack stack"
+    "draw discard . stack stack stack stack"
     "pile pile pile pile pile pile pile";
 
   @media (max-width: 768px) {
     grid-template-columns: auto 1fr;
     grid-template-rows: repeat(7, 1fr);
     grid-template-areas:
-      "stock pile"
-      "waste pile"
+      "draw pile"
+      "discard pile"
       ". pile"
       "stack pile"
       "stack pile"
@@ -75,11 +75,11 @@ export const Game = (props /*{ match }*/) => {
     match
   } = props;
   
-  const initialState = { stock: [[]], waste: [[]], stack: [[],[],[],[]], pile: [[],[],[],[],[],[],[]]};
+  const initialState = { draw: [[]], discard: [[]], stack: [[],[],[],[]], pile: [[],[],[],[],[],[],[]]};
 
   let [state, setState] = useState({
-    stock: [], 
-    waste: [], 
+    draw: [], 
+    discard: [], 
     stack: [], 
     pile: [],
     pile1: [],
@@ -100,18 +100,18 @@ export const Game = (props /*{ match }*/) => {
   let [startDrag, setStartDrag] = useState({ x: 0, y: 0 });
 
   const [{
-  stock, waste, stack, pile
+  draw, discard, stack, pile
   }, dispatch] = useReducer(reducer, initialState);
   
   const [message, setMessage] = useState('');
 
   const isDone = useMemo(() => {
 
-    const allCards = _flattenDeep([...stock, ...waste, ...stack]);
+    const allCards = _flattenDeep([...draw, ...discard, ...stack]);
     const up = _every(allCards, (card) => card.up);
-    const isStockAndWasteEmpty = stock[0].length === 0 && waste[0].length === 0;
+    const isStockAndWasteEmpty = draw[0].length === 0 && discard[0].length === 0;
     return isStockAndWasteEmpty && up;
-  }, [stack, stock, waste]);
+  }, [stack, draw, discard]);
 
   const isFinished = useMemo(() => {
     const allTableauCards = _flattenDeep(stack);
@@ -147,9 +147,8 @@ export const Game = (props /*{ match }*/) => {
   }, [pile]);
 
   useEffect(() => {
-    const pile = waste[0];
-    const topCard = _last(stock[0]);
-
+    const pile = discard[0];
+    const topCard = _last(draw[0]);
     if (pile.length === 0 && topCard) {
       dispatch({
         type: ActionTypes.MOVE_CARDS,
@@ -172,10 +171,10 @@ export const Game = (props /*{ match }*/) => {
         }
       }
     }
-  }, [stock, waste]);
+  }, [draw, discard]);
 
   useEffect(() => {
-    const pile = stock[0];
+    const pile = draw[0];
 
     for (const card of pile) {
       if (card.up) {
@@ -188,10 +187,9 @@ export const Game = (props /*{ match }*/) => {
         });
       }
     }
-  }, [stock]);
-
+  }, [draw]);
   const handleStockClick = (event) => {
-    const mappedCards = waste[0].map((card) => [card, 0, 0]);
+    const mappedCards = discard[0].map((card) => [card, 0, 0]);
     const reversedWasteCards = _reverse(mappedCards);
 
     dispatch({
@@ -204,15 +202,53 @@ export const Game = (props /*{ match }*/) => {
     });
   };
 
-  const handleStockCardClick = (event, card) => {
-    dispatch({
-      type: ActionTypes.MOVE_CARDS,
-      payload: {
-        cards: [[card, 0, 0]],
-        sourcePile: PileName.STOCK,
-        targetPile: PileName.WASTE
+  const sendMoveRequest = (mappedCards, sourceName, targetName) => {
+    let srcName = (sourceName == "draw" || sourceName == "discard") ? sourceName : sourceName + (mappedCards[0][1]+1);
+    let tgtName = (targetName == "draw" || targetName == "discard") ? targetName : targetName + (mappedCards[0][2]+1);
+    let moveResult = { 
+      cards: mappedCards.map(card => {
+        return { suit: card[0].suit, value: card[0].value, up: card[0].up }
+      }), 
+      src: srcName, 
+      dst: tgtName
+    };
+
+    console.log(moveResult);
+    
+    fetch(`/v1/game/${match.params.id}`, {
+      method: 'PUT',
+      body: JSON.stringify(moveResult),
+      headers: {
+          'Content-type': 'application/json; charset=UTF-8'
       }
-    });
+    })
+    .then(res => {
+      if (res.status == 401) {
+        console.log('Unauthorized.');
+      } else if (res.status == 404) {
+          console.log(`Can't reach to server.`);
+      }
+      return res.json();
+    })
+    .then(data => {
+      console.log(data);
+      console.log("mapdata:"+mappedCards);
+      if(data.ok) {
+        dispatch({
+          type: ActionTypes.MOVE_CARDS,
+          payload: {
+            cards: mappedCards,
+            sourcePile: sourceName,
+            targetPile: targetName
+          }
+        });
+      }
+    })
+    .catch(err => console.log(err));
+  }
+
+  const handleStockCardClick = (event, card) => {
+    sendMoveRequest([[card, 0, 0]], PileName.STOCK, PileName.WASTE);
   };
 
   const handleCardDoubleClick = (event, card, source) => {
@@ -221,14 +257,7 @@ export const Game = (props /*{ match }*/) => {
     const { status, statusText } = isLowerRank([card], stack[targetIndex]);
 
     if (status) {
-      dispatch({
-        type: ActionTypes.MOVE_CARDS,
-        payload: {
-          cards: [[card, sourceIndex, targetIndex]],
-          sourcePile: sourceName,
-          targetPile: PileName.STACK
-        }
-      });
+      sendMoveRequest([[card, sourceIndex, targetIndex]], sourceName, PileName.STACK);
     } else {
       for (targetIndex = 0; targetIndex < 7; targetIndex++) {
         if (PileName.PILE == sourceName && targetIndex == sourceIndex) continue;
@@ -237,23 +266,13 @@ export const Game = (props /*{ match }*/) => {
                     isDifferentColor([card], pile[targetIndex]).status);
 
         if (valid) {
-          dispatch({
-            type: ActionTypes.MOVE_CARDS,
-            payload: {
-              cards: [[card, sourceIndex, targetIndex]],
-              sourcePile: sourceName,
-              targetPile: PileName.PILE
-            }
-          });
+          sendMoveRequest([[card, sourceIndex, targetIndex]], sourceName, PileName.PILE);
           break;
         }
       }
       setMessage(statusText);
     }
   };
-
-  const sendMoveRequest = (moveResult) => {
-  }
 
   const handleDrop = (event, target) => {
     event.preventDefault();
@@ -285,49 +304,7 @@ export const Game = (props /*{ match }*/) => {
       const { status, statusText } = validationResult;
 
       if (status) {
-        let moveResult = { 
-          cards: mappedCards.map(card => {
-            console.log(card);
-            return { suit: card[0].suit, value: card[0].value, up: card[0].up }
-          }), 
-          src: sourceName + mappedCards[0][1], 
-          dst: targetName + mappedCards[0][2]
-        };
-
-        console.log(moveResult);
-
-        //sendMoveRequest(moveResult);
-        
-        fetch(`/v1/game/${match.params.id}`, {
-          method: 'PUT',
-          body: JSON.stringify(moveResult),
-          headers: {
-              'Content-type': 'application/json; charset=UTF-8'
-          }
-        })
-        .then(res => {
-          if (res.status == 401) {
-            console.log('Unauthorized.');
-          } else if (res.status == 404) {
-              console.log(`Can't reach to server.`);
-          }
-          return res.json();
-        })
-        .then(data => {
-          console.log(data);
-          console.log("mapdata:"+mappedCards);
-          if(data.ok) {
-            dispatch({
-              type: ActionTypes.MOVE_CARDS,
-              payload: {
-                cards: mappedCards,
-                sourcePile: sourceName,
-                targetPile: targetName
-              }
-            });
-          }
-        })
-        .catch(err => console.log(err));
+        sendMoveRequest(mappedCards, sourceName, targetName);
       }
 
       setMessage(statusText);
@@ -341,8 +318,8 @@ export const Game = (props /*{ match }*/) => {
       const response = await fetch(`/v1/game/${match.params.id}`);
       const data = await response.json();
       setState({
-        stock: [data.draw],
-        waste: [data.discard],
+        draw: [data.draw],
+        discard: [data.discard],
         stack: [data.stack1, data.stack2, data.stack3, data.stack4],
         pile: [data.pile1,data.pile2,data.pile3,data.pile4,data.pile5,data.pile6,data.pile7],
         pile1: data.pile1,
@@ -363,14 +340,12 @@ export const Game = (props /*{ match }*/) => {
       dispatch({
       type: ActionTypes.SET_INIT_VALUE,
         payload: {
-          stock: [data.draw],
-          waste: [data.discard],
+          draw: [data.draw],
+          discard: [data.discard],
           stack: [data.stack1, data.stack2, data.stack3, data.stack4],
           pile: [data.pile1,data.pile2,data.pile3,data.pile4,data.pile5,data.pile6,data.pile7],
         }
       });
-
-      console.log("awefawefawefawef");
     };
     getGameState();
   }, [match.params.id]);
@@ -419,20 +394,20 @@ export const Game = (props /*{ match }*/) => {
     /> */}
     <CardRowGap />
     <Pile
-      cards={stock[0]}
+      cards={draw[0]}
       spacing={0}
       name={PileName.STOCK}
       onClick={handleStockClick}
       onPileClick={handleStockClick}
       onCardClick={handleStockCardClick}
-      key="stock"
+      key="draw"
     />
     <Pile
-      cards={waste[0]}
+      cards={discard[0]}
       spacing={0}
       name={PileName.WASTE}
       onCardDoubleClick={handleCardDoubleClick}
-      key="waste"
+      key="discard"
     />
     {/* <PileGroup 
       piles={[state.draw]}
@@ -476,13 +451,13 @@ export const Game = (props /*{ match }*/) => {
     <CardRowGap />
     <PileGroup
       name={PileName.STOCK}
-      piles={stock}
+      piles={draw}
       onPileClick={handleStockClick}
       onCardClick={handleStockCardClick}
     />
     <PileGroup
       name={PileName.WASTE}
-      piles={waste}
+      piles={discard}
       onCardDoubleClick={handleCardDoubleClick}
     />
     </CardRow>
