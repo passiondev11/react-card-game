@@ -29,12 +29,12 @@ const getFoundationTargetIndex = (card) => {
 
 const setInitState = (prevState, payload) => {
 
-  const stock = payload.stock.map(stock => stock.map(stock => {
-      return new Card(stock.suit, stock.value, stock.up);
+  const draw = payload.draw.map(draw => draw.map(draw => {
+      return new Card(draw.suit, draw.value, draw.up);
   }));
   
-  const waste = payload.waste.map(waste => waste.map(waste => {
-    return new Card(waste.suit, waste.value, waste.up);
+  const discard = payload.discard.map(discard => discard.map(discard => {
+    return new Card(discard.suit, discard.value, discard.up);
   }));
   
   const stack = payload.stack.map(stack => stack.map(stack => {
@@ -47,8 +47,8 @@ const setInitState = (prevState, payload) => {
 
   return {
     ...prevState,
-    stock: stock,
-    waste: waste,
+    draw: draw,
+    discard: discard,
     stack: stack,
     pile: pile,
   };

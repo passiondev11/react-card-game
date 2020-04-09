@@ -42,8 +42,8 @@ const createSolvedState = () => {
   });
 
   const state = {
-    stock: [[]],
-    waste: [[]],
+    draw: [[]],
+    discard: [[]],
     stack: [[], [], [], []],
     pile: [
       revealedStack.slice(0, 1),
@@ -63,8 +63,8 @@ const createInitialState = () => {
   const stack = createNewStack();
 
   const state = {
-    stock: [stack.slice(28)],
-    waste: [[]],
+    draw: [stack.slice(28)],
+    discard: [[]],
     stack: [[], [], [], []],
     pile: [
       stack.slice(0, 1),

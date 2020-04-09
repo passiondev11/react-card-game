@@ -163,8 +163,8 @@ let validateMove = (state, requestedMove) => {
 
   let exData = {};
 
-  exData["stock1"] = state.draw;
-  exData["waste1"] = state.discard;
+  exData["draw"] = state.draw;
+  exData["discard"] = state.discard;
   exData["pile1"] = state.pile1;
   exData["pile2"] = state.pile2;
   exData["pile3"] = state.pile3;
@@ -193,7 +193,7 @@ let validateMove = (state, requestedMove) => {
     
     let card;
     while(card = requestedMove.cards.shift()) {
-      exData[requestedMove.src].shift();
+      exData[requestedMove.src].pop();
       exData[requestedMove.dst].push(card);
     }
   }
@@ -205,17 +205,44 @@ let validateMove = (state, requestedMove) => {
     
     let card;
     while(card = requestedMove.cards.shift()) {
+      exData[requestedMove.src].pop();
+      exData[requestedMove.dst].push(card);
+    }
+  }
+  /*
+  if(requestedMove.dst.indexOf("draw")!=-1) {
+    let card;
+    while(card = requestedMove.cards.shift()) {
       exData[requestedMove.src].shift();
+      card.up = false;
       exData[requestedMove.dst].push(card);
     }
   }
 
-  if(validStatus) {
+  if(requestedMove.dst.indexOf("discard")!=-1) {
     let card;
-    while(card = requestedMove.cards.pop()) {
-      exData[requestedMove.src].pop();
+    while(card = requestedMove.cards.shift()) {
+      exData[requestedMove.src].shift();
+      card.up = true;
       exData[requestedMove.dst].push(card);
     }
+  }
+  */
+  state.draw = exData["draw"];
+  state.discard = exData["discard"];
+  state.pile1 = exData["pile1"];
+  state.pile2 = exData["pile2"];
+  state.pile3 = exData["pile3"];
+  state.pile4 = exData["pile4"];
+  state.pile5 = exData["pile5"];
+  state.pile6 = exData["pile6"];
+  state.pile7 = exData["pile7"];
+  state.stack1= exData["stack1"];
+  state.stack2 = exData["stack2"];
+  state.stack3 = exData["stack3"];
+  state.stack4 = exData["stack4"];
+
+  if(validStatus) {
 
   }else {
     res.result = "success";
