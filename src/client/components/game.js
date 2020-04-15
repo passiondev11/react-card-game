@@ -125,6 +125,24 @@ export const Game = (props /*{ match }*/) => {
   }, [message]);
 
   useEffect(() => {
+    let data = { 
+      stack: stack,
+      draw: draw,
+      discard: discard,
+      pile: pile
+    };
+    
+    fetch(`/v1/game/setstate/${match.params.id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+      headers: {
+          'Content-type': 'application/json; charset=UTF-8'
+      }
+    });
+    
+  }, [stack, draw, discard, pile]);
+
+  useEffect(() => {
     if (isFinished) {
       setMessage('Congratulations!');
     }
@@ -212,8 +230,6 @@ export const Game = (props /*{ match }*/) => {
       src: srcName, 
       dst: tgtName
     };
-
-    console.log(moveResult);
     
     fetch(`/v1/game/${match.params.id}`, {
       method: 'PUT',
@@ -231,8 +247,6 @@ export const Game = (props /*{ match }*/) => {
       return res.json();
     })
     .then(data => {
-      console.log(data);
-      console.log("mapdata:"+mappedCards);
       if(data.ok) {
         dispatch({
           type: ActionTypes.MOVE_CARDS,
