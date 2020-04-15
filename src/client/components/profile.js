@@ -67,17 +67,16 @@ const EditLinkBase = styled.div`
   grid-area: sb;
   display: none;
   & > a {
-    cursor: not-allowed;
   }
   @media (min-width: 500px) {
     display: inherit;
   }
 `;
 
-const EditLink = ({ show }) => {
+const EditLink = ({ show, username }) => {
   return show ? (
     <EditLinkBase>
-      <Link to="/edit">Edit Profile</Link>
+      <Link to={"/edit/"+username}>Edit Profile</Link>
     </EditLinkBase>
   ) : null;
 };
@@ -117,7 +116,7 @@ export const Profile = props => {
   const isUser = state.username === props.currentUser;
   return (
     <Fragment>
-      <EditLink show={isUser} />
+      <EditLink show={isUser} username={state.username}/>
       <ProfileBase>
         <ErrorMessage msg={state.error} hide={true} />
         <ProfileBlock {...state} />

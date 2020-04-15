@@ -137,11 +137,12 @@ module.exports = app => {
     // Validate passed in data
     try {
       let schema = Joi.object().keys({
+        username: Joi.string().allow(""),
         first_name: Joi.string().allow(""),
         last_name: Joi.string().allow(""),
         city: Joi.string().allow("")
       });
-      data = schema.validateAsync(req.body);
+      data = await schema.validateAsync(req.body);
     } catch (err) {
       const message = err.details[0].message;
       console.log(`User.update validation failure: ${message}`);
@@ -150,11 +151,11 @@ module.exports = app => {
 
     // Update the user
     try {
-      const query = { username: req.session.user.username };
+      const query = { username: data.username };
       req.session.user = await app.models.User.findOneAndUpdate(
         query,
         { $set: data },
-        { new: true }
+        { new: false }
       );
       res.status(204).end();
     } catch (err) {

@@ -12,6 +12,7 @@ import { Login } from './components/login';
 import { Logout } from './components/logout';
 import { Register } from './components/register';
 import { Profile } from './components/profile';
+import { Edit } from './components/edit';
 import { Start } from './components/start';
 import { Results } from './components/results';
 import { Game } from './components/game';
@@ -104,6 +105,10 @@ const MyApp = () => {
         <Route
           path="/profile/:username"
           render={p => <Profile {...p} currentUser={state.username} />}
+        />
+        <Route
+          path="/edit/:username"
+          render={p => <Edit {...p} currentUser={state.username} />}
         />
         <Route
           path="/start"
