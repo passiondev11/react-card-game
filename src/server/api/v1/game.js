@@ -121,6 +121,57 @@ module.exports = app => {
    * @param (req.params.id} Id of game to fetch
    * @return {200} Validation result
    */
+  app.put("/v1/game/setstate/:id", async (req, res) => {
+    if (!req.session.user) {
+      res.status(401).send({ error: "unauthorized" });
+    } else {
+      let data;
+      try {
+        // Validate user input
+        let schema = Joi.object().keys({
+          stack: Joi.array(),
+          draw: Joi.array(),
+          discard: Joi.array(),
+          pile: Joi.array()
+        });
+        data = await schema.validateAsync(req.body);
+      } catch (err) {
+        const message = err.details[0].message;
+        console.log(`Move.create validation failure: ${message}`);
+        return res.status(400).send({ error: message });
+      }
+      let state = {};
+      if(!(data.draw[0].length == 0 && data.discard[0].length == 0)) {
+        state.draw = data.draw[0];
+        state.discard = data.discard[0];
+        state.pile1 = data.pile[0];
+        state.pile2 = data.pile[1];
+        state.pile3 = data.pile[2];
+        state.pile4 = data.pile[3];
+        state.pile5 = data.pile[4];
+        state.pile6 = data.pile[5];
+        state.pile7 = data.pile[6];
+        state.stack1= data.stack[0];
+        state.stack2 = data.stack[1];
+        state.stack3 = data.stack[2];
+        state.stack4 = data.stack[3];
+        let  query = { state: state };
+        // Set game status
+        await app.models.Game.findByIdAndUpdate(req.params.id, query);
+        console.log(data.discard);
+        console.log("game status changed.");
+      }
+
+      res.status(201).send({ ok: "ok"});
+    }
+  });
+
+  /**
+   * Validate the movement and add card movement information
+   *
+   * @param (req.params.id} Id of game to fetch
+   * @return {200} Validation result
+   */
   app.put("/v1/game/:id", async (req, res) => {
     if (!req.session.user) {
       res.status(401).send({ error: "unauthorized" });

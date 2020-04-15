@@ -23,7 +23,7 @@
     "react-router-dom": "^5.1.2",
     "serve-favicon": "^2.5.0",
     "simple-env-config": "^1.0.1",
-    "styled-components": "^5.0.1",
+    "styled-components": "^5.1.0",
     "svg-cards": "^4.0.0"
   },
   "scripts": {
@@ -38,14 +38,14 @@
   "license": "ISC",
   "devDependencies": {
     "@babel/core": "^7.9.0",
-    "@babel/preset-env": "^7.9.0",
+    "@babel/preset-env": "^7.9.5",
     "@babel/preset-react": "^7.9.4",
     "async": "^3.2.0",
     "babel-loader": "^8.1.0",
     "chai": "^4.2.0",
     "cross-env": "^7.0.2",
     "mocha": "^7.1.1",
-    "prettier": "^2.0.2",
+    "prettier": "^2.0.4",
     "puppeteer": "^2.1.1",
     "should": "^13.2.3",
     "superagent": "^5.2.2",
