@@ -4,6 +4,8 @@ import _every from 'lodash/every';
 import _flatten from 'lodash/flatten';
 import { ranks } from './setup';
 
+import { Rank } from './definitions'
+
 const genericError = {
   status: false,
   statusText: 'Some error occurred'
@@ -31,7 +33,9 @@ const isHigherRank = (cards, pile) => {
   if (!firstCard) {
     return genericError;
   }
-  const result = !topCard || ranks.indexOf(firstCard.value) === ranks.indexOf(topCard.value) - 1;
+  let result = !topCard || ranks.indexOf(firstCard.value) === ranks.indexOf(topCard.value) - 1;
+  if(!topCard)
+    result &= firstCard.value == Rank.King;
   return {
     status: result,
     statusText: result ? '' : MOVE_NOT_ALLOWED
