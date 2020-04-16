@@ -14,7 +14,7 @@ const Move = ({ move, index }) => {
       <th>{move.id ? move.id : index + 1}</th>
       <th>{duration} seconds</th>
       <th>
-        <Link to={`/profile/${move.player}`}>{move.player}</Link>
+        <Link to={`/profile/${move.user}`}>{move.user}</Link>
       </th>
       <th>{move.move}</th>
     </tr>
@@ -108,7 +108,7 @@ export const Results = ({ match }) => {
   let [error, setError] = useState('');
   // Fetch data on load
   useEffect(() => {
-    fetch(`/v1/game/${match.params.id}`)
+    fetch(`/v1/game/${match.params.id}?moves=`)
       .then(res => res.json())
       .then(data => {
         setGame(data);

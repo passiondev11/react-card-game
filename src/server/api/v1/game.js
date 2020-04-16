@@ -105,7 +105,7 @@ module.exports = app => {
         // Do we need to grab the moves
         if (req.query.moves === "") {
           const moves = await app.models.Move.find({ game: req.params.id });
-          state.moves = moves.map(move => filterMoveForResults(move));
+          state.moves = moves;//moves.map(move => filterMoveForResults(move));
         }
         res.status(200).send(Object.assign({}, results, state));
       }
@@ -216,17 +216,14 @@ module.exports = app => {
         let move = new app.models.Move(newMove);
         await move.save();
 
-        console.log("move saved");
 
         let query = { $inc: { moves: 1 } };
         // Add game movement value
         await app.models.Game.findByIdAndUpdate(req.params.id, query);
-        console.log("move count incremented.");
 
         query = { state: result.state };
         // Add game movement value
         await app.models.Game.findByIdAndUpdate(req.params.id, query);
-        console.log("game status changed.");
 
         res.status(201).send({ ok: "ok" });
       } catch (err) {

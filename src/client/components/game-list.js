@@ -8,11 +8,15 @@ import styled from 'styled-components';
 
 const Game = ({ username, game }) => {
   const date = new Date(game.start);
-  const url = `/${game.active ? 'game' : 'staus'}/${game.id}`;
+  const url = `/${game.active ? 'game' : 'results'}/${game.id}`;
+  const results_url = `/results/${game.id}`;
   return (
     <tr>
       <td>
         <Link to={url}>{game.active ? 'Active' : 'Complete'}</Link>
+      </td>
+      <td>
+        <Link to={results_url}>Moves</Link>
       </td>
       <td>{date.toLocaleString()}</td>
       <td>{game.moves}</td>
@@ -90,6 +94,7 @@ export const GameList = ({ games, username, toCreateGame }) => {
         <thead>
           <tr>
             <th>Status</th>
+            <th>Results</th>
             <th>Start Date</th>
             <th># of Moves</th>
             <th>Score</th>
