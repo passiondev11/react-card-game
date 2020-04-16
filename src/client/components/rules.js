@@ -34,8 +34,9 @@ const isHigherRank = (cards, pile) => {
     return genericError;
   }
   let result = !topCard || ranks.indexOf(firstCard.value) === ranks.indexOf(topCard.value) - 1;
-  if(!topCard)
+  if(!topCard) {
     result &= firstCard.value == Rank.King;
+  }
   return {
     status: result,
     statusText: result ? '' : MOVE_NOT_ALLOWED
@@ -47,7 +48,8 @@ const isLowerRank = (cards, pile) => {
   if (!firstCard) {
     return genericError;
   }
-  const result = pile.length === ranks.indexOf(firstCard.value);
+  let result = pile.length ? (pile.length === ranks.indexOf(firstCard.value) && pile[0].suit == firstCard.suit)
+                          :firstCard.value == Rank.Ace;
 
   return {
     status: result,

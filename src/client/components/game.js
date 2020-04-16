@@ -230,7 +230,9 @@ export const Game = (props /*{ match }*/) => {
       src: srcName, 
       dst: tgtName
     };
-    
+
+    console.log(moveResult);
+
     fetch(`/v1/game/${match.params.id}`, {
       method: 'PUT',
       body: JSON.stringify(moveResult),
@@ -267,12 +269,16 @@ export const Game = (props /*{ match }*/) => {
 
   const handleCardDoubleClick = (event, card, source) => {
     const [sourceName, sourceIndex] = source;
-    let targetIndex = getFoundationTargetIndex(card);
-    const { status, statusText } = isLowerRank([card], stack[targetIndex]);
-
-    if (status) {
-      sendMoveRequest([[card, sourceIndex, targetIndex]], sourceName, PileName.STACK);
-    } else {
+    let targetIndex;
+    let res;
+    for(targetIndex = 0; targetIndex < 4; targetIndex++) {
+      res = isLowerRank([card], stack[targetIndex]);
+      if (res.status) {
+        sendMoveRequest([[card, sourceIndex, targetIndex]], sourceName, PileName.STACK);
+        break;
+      }
+    }
+    if(!res.status) {
       for (targetIndex = 0; targetIndex < 7; targetIndex++) {
         if (PileName.PILE == sourceName && targetIndex == sourceIndex) continue;
         let valid = (pile[targetIndex].length == 0) || 
@@ -284,7 +290,7 @@ export const Game = (props /*{ match }*/) => {
           break;
         }
       }
-      setMessage(statusText);
+      setMessage(res.statusText);
     }
   };
 
@@ -374,6 +380,7 @@ export const Game = (props /*{ match }*/) => {
     <Pile
       cards={stack[0]}
       spacing={0}
+      index={0}
       name={PileName.STACK}
       onDrop={handleDrop}
       key="foundation1"
@@ -381,6 +388,7 @@ export const Game = (props /*{ match }*/) => {
     <Pile
       cards={stack[1]}
       spacing={0}
+      index={1}
       name={PileName.STACK}
       onDrop={handleDrop}
       key="foundation2"
@@ -388,6 +396,7 @@ export const Game = (props /*{ match }*/) => {
     <Pile
       cards={stack[2]}
       spacing={0}
+      index={2}
       name={PileName.STACK}
       onDrop={handleDrop}
       key="foundation3"
@@ -395,6 +404,7 @@ export const Game = (props /*{ match }*/) => {
     <Pile
       cards={stack[3]}
       spacing={0}
+      index={3}
       name={PileName.STACK}
       onDrop={handleDrop}
       key="foundation4"
